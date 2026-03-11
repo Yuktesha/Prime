@@ -60,7 +60,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Navigation
     navLinks.forEach(link => {
         link.addEventListener('click', (e) => {
-            e.preventDefault();
+            if (e) e.preventDefault();
             const targetId = link.getAttribute('data-target');
 
             navLinks.forEach(l => l.classList.remove('active'));
@@ -70,8 +70,36 @@ document.addEventListener('DOMContentLoaded', async () => {
                 if (sec.id === targetId) sec.classList.add('active');
                 else sec.classList.remove('active');
             });
+
+            // Update URL hash for sharing (prevents page jump)
+            if (e) {
+                history.replaceState(null, null, `#${targetId}`);
+            }
         });
     });
+
+    // Deep Linking / URL Parameter handling
+    function activateTabAndScroll(targetId) {
+        const link = document.querySelector(`.nav-link[data-target="${targetId}"]`);
+        if (link) link.click();
+    }
+
+    const hash = decodeURIComponent(window.location.hash).toLowerCase();
+    const search = window.location.search.toLowerCase();
+
+    // Map keywords to their corresponding tab IDs
+    if (hash.includes('app-text') || hash.includes('文字轉換探索') || search.includes('prmec') || search.includes('text')) {
+        activateTabAndScroll('app-text');
+    } else if (hash.includes('app-phone') || hash.includes('電話號碼質距') || search.includes('phone')) {
+        activateTabAndScroll('app-phone');
+    } else if (hash.includes('app-sum') || hash.includes('連續質數和') || search.includes('sum')) {
+        activateTabAndScroll('app-sum');
+    } else if (hash.includes('app-plate') || hash.includes('車牌找質數') || search.includes('plate')) {
+        activateTabAndScroll('app-plate');
+    } else if (hash) {
+        // If there's an exact hash match with standard IDs
+        activateTabAndScroll(hash.substring(1));
+    }
 
     /** -----------------------------------------
      * TOOL 1: License Plate Prime Finder
