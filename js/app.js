@@ -96,9 +96,25 @@ document.addEventListener('DOMContentLoaded', async () => {
     const getParam = (name) => searchParams.get(name) || hashParams.get(name);
 
     let activeToolId = null;
+    let isShortShare = false;
+    let decompressedText = '';
 
-    // Map keywords to their corresponding tab IDs
-    if (hashBase.includes('app-text') || hashBase.includes('文字轉換探索') || searchStr.includes('prmec') || searchStr.includes('text')) {
+    if (rawHash.startsWith('#s=')) {
+        const payload = rawHash.substring(3);
+        try {
+            if (typeof LZString !== 'undefined') {
+                decompressedText = LZString.decompressFromEncodedURIComponent(payload);
+                if (decompressedText) {
+                    activeToolId = 'app-text';
+                    isShortShare = true;
+                }
+            } else {
+                console.warn("LZString not loaded. Cannot decompress short link.");
+            }
+        } catch(e) {
+            console.error("Failed to decompress short share link:", e);
+        }
+    } else if (hashBase.includes('app-text') || hashBase.includes('文字轉換探索') || searchStr.includes('prmec') || searchStr.includes('text')) {
         activeToolId = 'app-text';
     } else if (hashBase.includes('app-phone') || hashBase.includes('電話號碼質距') || searchStr.includes('phone')) {
         activeToolId = 'app-phone';
@@ -119,10 +135,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     // We delay slightly to ensure DOM bindings are fully active
     setTimeout(() => {
         if (activeToolId === 'app-text') {
-            const textVal = getParam('text') || getParam('prmec');
+            const textVal = isShortShare ? decompressedText : (getParam('text') || getParam('prmec'));
             if (textVal) {
                 // Determine if it's an encrypted string meant for decryption.
                 // Ciphers typically contain underscores, or +/- followed by numbers, or are purely numeric/math/spaces.
+                // Our char cipher uses words followed by numbers (like "word+5" or "word-3")
                 const isCipher = /^[\d_+\-\s]+$/.test(textVal) || /_/.test(textVal) || /[+\-]\d+/.test(textVal);
                 
                 if (isCipher) {
@@ -601,7 +618,21 @@ document.addEventListener('DOMContentLoaded', async () => {
                 fullCipherChar.push(finalCharStr);
             });
 
-            const shareUrl = window.location.origin + window.location.pathname + '#app-text?text=' + encodeURIComponent(exactText);
+        let payloadText = exactText;
+        if (mode === 'encrypt') {
+            // For encrypt, share the Char-based cipher so the original text is hidden
+            payloadText = fullCipherChar.join(' ');
+        }
+        
+        // Generate custom Base62 LZW compressed short URL
+        let shareUrl = window.location.origin + window.location.pathname;
+        if (typeof LZString !== 'undefined') {
+            const compressedPayload = LZString.compressToEncodedURIComponent(payloadText);
+            shareUrl += '#s=' + compressedPayload;
+        } else {
+            // Fallback
+            shareUrl += '#app-text?text=' + encodeURIComponent(payloadText);
+        }
 
             const summaryCard = document.createElement('div');
             summaryCard.className = 'card mb-4 border-primary shadow';
