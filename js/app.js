@@ -121,19 +121,23 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (activeToolId === 'app-text') {
             const textVal = getParam('text') || getParam('prmec');
             if (textVal) {
-                // If it looks like typical encrypted string (numbers and underscores), put it in decrypt
-                if (/^[\d_+-]+$/.test(textVal)) {
+                // Determine if it's an encrypted string meant for decryption.
+                // Ciphers typically contain underscores, or +/- followed by numbers, or are purely numeric/math/spaces.
+                const isCipher = /^[\d_+\-\s]+$/.test(textVal) || /_/.test(textVal) || /[+\-]\d+/.test(textVal);
+                
+                if (isCipher) {
                     const decInput = document.getElementById('textInputDecrypt');
                     const decBtn = document.getElementById('btnDecrypt');
                     if (decInput && decBtn) {
-                        decInput.value = textVal;
+                        // Strip leading/trailing quotes if they accidentally copied them
+                        decInput.value = textVal.replace(/^"|"$/g, '').trim();
                         decBtn.click();
                     }
                 } else {
                     const encInput = document.getElementById('textInputEncrypt');
                     const encBtn = document.getElementById('btnEncrypt');
                     if (encInput && encBtn) {
-                        encInput.value = textVal;
+                        encInput.value = textVal.replace(/^"|"$/g, '').trim();
                         encBtn.click();
                     }
                 }
