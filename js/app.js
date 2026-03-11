@@ -85,21 +85,80 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     const hash = decodeURIComponent(window.location.hash).toLowerCase();
-    const search = window.location.search.toLowerCase();
+    const searchParams = new URLSearchParams(window.location.search);
+    const searchStr = window.location.search.toLowerCase();
+
+    let activeToolId = null;
 
     // Map keywords to their corresponding tab IDs
-    if (hash.includes('app-text') || hash.includes('文字轉換探索') || search.includes('prmec') || search.includes('text')) {
-        activateTabAndScroll('app-text');
-    } else if (hash.includes('app-phone') || hash.includes('電話號碼質距') || search.includes('phone')) {
-        activateTabAndScroll('app-phone');
-    } else if (hash.includes('app-sum') || hash.includes('連續質數和') || search.includes('sum')) {
-        activateTabAndScroll('app-sum');
-    } else if (hash.includes('app-plate') || hash.includes('車牌找質數') || search.includes('plate')) {
-        activateTabAndScroll('app-plate');
+    if (hash.includes('app-text') || hash.includes('文字轉換探索') || searchStr.includes('prmec') || searchStr.includes('text')) {
+        activeToolId = 'app-text';
+    } else if (hash.includes('app-phone') || hash.includes('電話號碼質距') || searchStr.includes('phone')) {
+        activeToolId = 'app-phone';
+    } else if (hash.includes('app-sum') || hash.includes('連續質數和') || searchStr.includes('sum')) {
+        activeToolId = 'app-sum';
+    } else if (hash.includes('app-plate') || hash.includes('車牌找質數') || searchStr.includes('plate')) {
+        activeToolId = 'app-plate';
     } else if (hash) {
         // If there's an exact hash match with standard IDs
-        activateTabAndScroll(hash.substring(1));
+        activeToolId = hash.substring(1);
     }
+
+    if (activeToolId) {
+        activateTabAndScroll(activeToolId);
+    }
+
+    // Attempt Auto-Fill and Auto-Execute based on URL Parameters
+    // We delay slightly to ensure DOM bindings are fully active
+    setTimeout(() => {
+        if (activeToolId === 'app-text') {
+            const textVal = searchParams.get('text') || searchParams.get('prmec');
+            if (textVal) {
+                // If it looks like typical encrypted string (numbers and underscores), put it in decrypt
+                if (/^[\d_+-]+$/.test(textVal)) {
+                    const decInput = document.getElementById('textInputDecrypt');
+                    const decBtn = document.getElementById('btnDecrypt');
+                    if (decInput && decBtn) {
+                        decInput.value = textVal;
+                        decBtn.click();
+                    }
+                } else {
+                    const encInput = document.getElementById('textInputEncrypt');
+                    const encBtn = document.getElementById('btnEncrypt');
+                    if (encInput && encBtn) {
+                        encInput.value = textVal;
+                        encBtn.click();
+                    }
+                }
+            }
+        }
+        else if (activeToolId === 'app-phone') {
+            const phoneVal = searchParams.get('phone');
+            if (phoneVal) {
+                const phoneInput = document.getElementById('phoneNumber');
+                const phoneForm = document.getElementById('phoneForm');
+                if (phoneInput && phoneForm) {
+                    phoneInput.value = phoneVal;
+                    // Trigger submit event
+                    phoneForm.dispatchEvent(new Event('submit', { cancelable: true }));
+                }
+            }
+        }
+        else if (activeToolId === 'app-plate') {
+            const plateVal = searchParams.get('plate');
+            if (plateVal && plateVal.includes('-')) {
+                const parts = plateVal.split('-');
+                const p1 = document.getElementById('plate1');
+                const p2 = document.getElementById('plate2');
+                const plateForm = document.getElementById('plateForm');
+                if (p1 && p2 && plateForm && parts.length >= 2) {
+                    p1.value = parts[0];
+                    p2.value = parts[1];
+                    plateForm.dispatchEvent(new Event('submit', { cancelable: true }));
+                }
+            }
+        }
+    }, 100);
 
     /** -----------------------------------------
      * TOOL 1: License Plate Prime Finder
