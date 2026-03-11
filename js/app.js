@@ -601,6 +601,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 fullCipherChar.push(finalCharStr);
             });
 
+            const shareUrl = window.location.origin + window.location.pathname + '#app-text?text=' + encodeURIComponent(exactText);
+
             const summaryCard = document.createElement('div');
             summaryCard.className = 'card mb-4 border-primary shadow';
             summaryCard.style.gridColumn = "1 / -1";
@@ -609,7 +611,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <p class="mb-1 small text-muted">🔢 數字密碼版本：</p>
                     <textarea class="form-control mb-3 fw-bold text-primary fs-5 bg-light copy-area" rows="2" readonly onclick="this.select();">${fullCipherNum.join(' ')}</textarea>
                     <p class="mb-1 small text-muted">🔤 文字密碼版本：</p>
-                    <textarea class="form-control fw-bold text-success fs-5 bg-light copy-area" rows="2" readonly onclick="this.select();">${fullCipherChar.join(' ')}</textarea>
+                    <textarea class="form-control mb-3 fw-bold text-success fs-5 bg-light copy-area" rows="2" readonly onclick="this.select();">${fullCipherChar.join(' ')}</textarea>
+                    <hr class="my-3"/>
+                    <p class="mb-1 small text-muted">🔗 分享專屬連結 (自動帶入您的輸入內容)：</p>
+                    <div class="input-group input-group-sm">
+                        <input type="text" class="form-control bg-light text-muted" value="${shareUrl}" readonly onclick="this.select();">
+                    </div>
                 </div>`;
 
             textResults.appendChild(summaryCard);
@@ -737,6 +744,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 finalOutputString += cur;
             }
 
+            const shareUrl = window.location.origin + window.location.pathname + '#app-text?text=' + encodeURIComponent(exactText);
+
             const summaryCard = document.createElement('div');
             summaryCard.className = 'card mb-4 border-success shadow';
             summaryCard.style.gridColumn = "1 / -1";
@@ -744,6 +753,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <div class="card-body">
                     <p class="mb-1 small text-muted">✨ 完美還原：</p>
                     <textarea class="form-control mb-3 fw-bold text-success fs-5 bg-light copy-area" rows="2" readonly onclick="this.select();">${finalOutputString}</textarea>
+                    <hr class="my-3"/>
+                    <p class="mb-1 small text-muted">🔗 分享專屬連結 (自動帶入您的密文)：</p>
+                    <div class="input-group input-group-sm">
+                        <input type="text" class="form-control bg-light text-muted" value="${shareUrl}" readonly onclick="this.select();">
+                    </div>
                 </div>`;
 
             textResults.appendChild(summaryCard);
