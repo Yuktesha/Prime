@@ -84,24 +84,31 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (link) link.click();
     }
 
-    const hash = decodeURIComponent(window.location.hash).toLowerCase();
+    const rawHash = window.location.hash;
+    const hashParts = rawHash.split('?');
+    const hashBase = decodeURIComponent(hashParts[0]).toLowerCase();
+    const hashParams = new URLSearchParams(hashParts[1] || "");
+    
     const searchParams = new URLSearchParams(window.location.search);
     const searchStr = window.location.search.toLowerCase();
+
+    // Helper to get param from either search or hash
+    const getParam = (name) => searchParams.get(name) || hashParams.get(name);
 
     let activeToolId = null;
 
     // Map keywords to their corresponding tab IDs
-    if (hash.includes('app-text') || hash.includes('文字轉換探索') || searchStr.includes('prmec') || searchStr.includes('text')) {
+    if (hashBase.includes('app-text') || hashBase.includes('文字轉換探索') || searchStr.includes('prmec') || searchStr.includes('text')) {
         activeToolId = 'app-text';
-    } else if (hash.includes('app-phone') || hash.includes('電話號碼質距') || searchStr.includes('phone')) {
+    } else if (hashBase.includes('app-phone') || hashBase.includes('電話號碼質距') || searchStr.includes('phone')) {
         activeToolId = 'app-phone';
-    } else if (hash.includes('app-sum') || hash.includes('連續質數和') || searchStr.includes('sum')) {
+    } else if (hashBase.includes('app-sum') || hashBase.includes('連續質數和') || searchStr.includes('sum')) {
         activeToolId = 'app-sum';
-    } else if (hash.includes('app-plate') || hash.includes('車牌找質數') || searchStr.includes('plate')) {
+    } else if (hashBase.includes('app-plate') || hashBase.includes('車牌找質數') || searchStr.includes('plate')) {
         activeToolId = 'app-plate';
-    } else if (hash) {
+    } else if (hashBase) {
         // If there's an exact hash match with standard IDs
-        activeToolId = hash.substring(1);
+        activeToolId = hashBase.substring(1);
     }
 
     if (activeToolId) {
@@ -112,7 +119,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // We delay slightly to ensure DOM bindings are fully active
     setTimeout(() => {
         if (activeToolId === 'app-text') {
-            const textVal = searchParams.get('text') || searchParams.get('prmec');
+            const textVal = getParam('text') || getParam('prmec');
             if (textVal) {
                 // If it looks like typical encrypted string (numbers and underscores), put it in decrypt
                 if (/^[\d_+-]+$/.test(textVal)) {
@@ -133,7 +140,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         }
         else if (activeToolId === 'app-phone') {
-            const phoneVal = searchParams.get('phone');
+            // Support both ?phone=VAL and shorthand #app-phone?VAL
+            let phoneVal = getParam('phone') || hashParts[1];
+            // If hashParts[1] contains an equals sign, it's likely a key-value pair, so we skip the shorthand logic
+            if (hashParts[1] && hashParts[1].includes('=') && !hashParams.has('phone')) {
+                phoneVal = null; 
+            }
+
             if (phoneVal) {
                 const phoneInput = document.getElementById('phoneNumber');
                 const phoneForm = document.getElementById('phoneForm');
@@ -145,7 +158,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         }
         else if (activeToolId === 'app-plate') {
-            const plateVal = searchParams.get('plate');
+            const plateVal = getParam('plate');
             if (plateVal && plateVal.includes('-')) {
                 const parts = plateVal.split('-');
                 const p1 = document.getElementById('plate1');
